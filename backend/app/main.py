@@ -11,14 +11,21 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="CardioCheck API")
 
 # --- 2. CORS Middleware ---
-# This allows the frontend (which is on a different "origin") to communicate with this backend.
-# In a production environment, you would restrict the allow_origins to your specific frontend domain.
+# Define the list of allowed origins. This is the key fix.
+# Browsers treat http://localhost and http://127.0.0.1 as different origins.
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.mount("/static", StaticFiles(directory="../frontend"), name="static")
