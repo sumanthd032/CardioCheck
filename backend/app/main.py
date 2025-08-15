@@ -68,9 +68,10 @@ async def read_root():
 @app.post("/api/predict")
 def predict_disease(data: PatientData):
     """
-    Prediction endpoint with detailed logging for debugging.
+    Prediction endpoint with corrected data preprocessing logic.
     """
-    if not model or not model_columns:
+    # **FIXED**: Check for None explicitly instead of truthiness
+    if model is None or model_columns is None:
         return JSONResponse(status_code=503, content={"error": "Model not loaded. Please check server logs."})
 
     try:
@@ -79,25 +80,18 @@ def predict_disease(data: PatientData):
 
         # 1. Convert incoming data into a pandas DataFrame
         input_df = pd.DataFrame([data.dict()])
-        print("\nStep 1: DataFrame created from input:")
-        print(input_df.to_string())
+        print("\nStep 1: DataFrame created from input.")
 
-        # 2. One-hot encode the categorical features
+        # 2. One-hot encode the categorical features. This is the standard approach.
         input_df = pd.get_dummies(input_df)
-        print("\nStep 2: DataFrame after one-hot encoding. Columns:", input_df.columns.tolist())
-        
-        # 3. Align the columns of the input data with the model's columns
-        print("\nStep 3: Aligning columns with the trained model...")
-        print("Model expects columns:", model_columns.tolist())
-        
-        aligned_df = input_df.reindex(columns=model_columns, fill_value=0)
-        print("\nDataFrame after column alignment:")
-        print(aligned_df.to_string())
-        
-        if aligned_df.isnull().values.any():
-            print("ERROR: NaN values found after reindexing!")
-            raise ValueError("Data alignment resulted in NaN values.")
+        print("\nStep 2: DataFrame after one-hot encoding.")
 
+        # 3. Align the columns of the input data with the model's columns.
+        # This is the most critical step. It ensures the DataFrame sent to the model
+        # has the exact same structure as the one used for training.
+        aligned_df = input_df.reindex(columns=model_columns, fill_value=0)
+        print("\nStep 3: DataFrame aligned with model columns.")
+        
         # 4. Make prediction
         print("\nStep 4: Making prediction...")
         prediction = model.predict(aligned_df)
@@ -115,7 +109,7 @@ def predict_disease(data: PatientData):
         print("\n---!!! AN ERROR OCCURRED DURING PREDICTION !!!---")
         traceback.print_exc()
         print("--------------------------------------------------\n")
-        return JSONResponse(status_code=500, content={"error": f"An error occurred: {str(e)}"})
+        return JSONResponse(status_code=500, content={"error": f"An error occurred during prediction logic: {str(e)}"})
 
 @app.get("/api/health")
 def health_check():
