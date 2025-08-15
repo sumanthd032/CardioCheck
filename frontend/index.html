@@ -1,47 +1,238 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CardioCheck - Heart Disease Predictor</title>
-<!-- Tailwind CSS for styling -->
-<script src="https://www.google.com/search?q=https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://www.google.com/search?q=https://fonts.googleapis.com">
-<link rel="preconnect" href="https://www.google.com/search?q=https://fonts.gstatic.com" crossorigin>
-<link href="https://www.google.com/search?q=https://fonts.googleapis.com/css2%3Ffamily%3DInter:wght%40400%3B500%3B600%3B700%26display%3Dswap" rel="stylesheet">
-<style>
-body {
-font-family: 'Inter', sans-serif;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioCheck - Heart Disease Predictor</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple spinner for loading state */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #ffffff;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-<div class="container mx-auto p-4 md:p-8 max-w-2xl">
-    <header class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-red-600">CardioCheck</h1>
-        <p class="text-lg text-gray-600 mt-2">Predict Your Heart Disease Risk</p>
-    </header>
 
-    <main class="bg-white p-8 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold mb-6 text-center">Phase 1: Project Setup Complete</h2>
-        <p class="text-center text-gray-700">
-            The basic structure for our project is now in place. We have a frontend built with HTML and Tailwind CSS, and a backend powered by FastAPI.
-        </p>
-        <div class="mt-6 p-4 bg-blue-100 text-blue-800 rounded-md">
-            <p class="font-semibold">Next Steps:</p>
-            <ul class="list-disc list-inside mt-2">
-                <li>Data exploration and preprocessing.</li>
-                <li>Training the logistic regression model.</li>
-                <li>Creating the prediction endpoint in our API.</li>
-            </ul>
-        </div>
-    </main>
+    <div class="container mx-auto p-4 md:p-8 max-w-3xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-red-600">CardioCheck</h1>
+            <p class="text-lg text-gray-600 mt-2">Enter Your Health Metrics to Predict Heart Disease Risk</p>
+        </header>
 
-    <footer class="text-center mt-8 text-gray-500">
-        <p>&copy; 2024 CardioCheck. For informational purposes only.</p>
-    </footer>
-</div>
+        <main class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+            <!-- Input Form -->
+            <form id="prediction-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Input fields for patient data -->
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-700">Age</label>
+                    <input type="number" id="age" name="age" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 52">
+                </div>
 
+                <div>
+                    <label for="sex" class="block text-sm font-medium text-gray-700">Sex</label>
+                    <select id="sex" name="sex" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="cp" class="block text-sm font-medium text-gray-700">Chest Pain Type</label>
+                    <select id="cp" name="cp" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="typ. ang.">Typical Angina</option>
+                        <option value="atyp. ang.">Atypical Angina</option>
+                        <option value="non-ang.">Non-anginal Pain</option>
+                        <option value="asympt.">Asymptomatic</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="trestbps" class="block text-sm font-medium text-gray-700">Resting Blood Pressure (mm Hg)</label>
+                    <input type="number" id="trestbps" name="trestbps" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 120">
+                </div>
+                
+                <div>
+                    <label for="chol" class="block text-sm font-medium text-gray-700">Serum Cholesterol (mg/dl)</label>
+                    <input type="number" id="chol" name="chol" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 210">
+                </div>
+
+                <div>
+                    <label for="fbs" class="block text-sm font-medium text-gray-700">Fasting Blood Sugar > 120 mg/dl</label>
+                    <select id="fbs" name="fbs" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="restecg" class="block text-sm font-medium text-gray-700">Resting ECG Results</label>
+                    <select id="restecg" name="restecg" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="normal">Normal</option>
+                        <option value="st-t ab.">ST-T wave abnormality</option>
+                        <option value="lvh">Probable or definite LVH</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="thalch" class="block text-sm font-medium text-gray-700">Max Heart Rate Achieved</label>
+                    <input type="number" id="thalch" name="thalch" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 150">
+                </div>
+
+                <div>
+                    <label for="exang" class="block text-sm font-medium text-gray-700">Exercise Induced Angina</label>
+                    <select id="exang" name="exang" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="oldpeak" class="block text-sm font-medium text-gray-700">ST depression induced by exercise</label>
+                    <input type="number" step="0.1" id="oldpeak" name="oldpeak" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 1.5">
+                </div>
+
+                <div>
+                    <label for="slope" class="block text-sm font-medium text-gray-700">Slope of the peak exercise ST segment</label>
+                    <select id="slope" name="slope" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="up">Upsloping</option>
+                        <option value="flat">Flat</option>
+                        <option value="down">Downsloping</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="ca" class="block text-sm font-medium text-gray-700">Number of major vessels (0-3)</label>
+                    <input type="number" id="ca" name="ca" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="e.g., 1">
+                </div>
+
+                <div>
+                    <label for="thal" class="block text-sm font-medium text-gray-700">Thalassemia</label>
+                    <select id="thal" name="thal" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="normal">Normal</option>
+                        <option value="fixed def.">Fixed Defect</option>
+                        <option value="rev. def.">Reversible Defect</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="md:col-span-2 text-center mt-4">
+                    <button type="submit" id="submit-button" class="w-full md:w-auto inline-flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-transform transform hover:scale-105">
+                        <span id="button-text">Calculate Risk</span>
+                        <div id="button-spinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Results Display Area -->
+            <div id="results-container" class="mt-8 text-center hidden">
+                <h2 class="text-2xl font-semibold mb-4">Prediction Result</h2>
+                <div id="result-card" class="p-6 rounded-lg">
+                    <p class="text-xl font-medium">Predicted Risk:</p>
+                    <p id="prediction-result" class="text-3xl font-bold"></p>
+                    <p class="text-md mt-2">Probability of Heart Disease:</p>
+                    <p id="probability-result" class="text-2xl font-semibold"></p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center mt-8 text-gray-500">
+            <p>&copy; 2024 CardioCheck. For informational purposes only. This is not a medical diagnosis.</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultsContainer = document.getElementById('results-container');
+        const predictionResult = document.getElementById('prediction-result');
+        const probabilityResult = document.getElementById('probability-result');
+        const resultCard = document.getElementById('result-card');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonSpinner = document.getElementById('button-spinner');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            // Show loading state
+            buttonText.classList.add('hidden');
+            buttonSpinner.classList.remove('hidden');
+            submitButton.disabled = true;
+            resultsContainer.classList.add('hidden');
+
+            const formData = new FormData(form);
+            const data = {};
+            // Convert FormData to a plain object, ensuring correct data types
+            for (let [key, value] of formData.entries()) {
+                // Check if the value can be converted to a number
+                if (!isNaN(value) && value.trim() !== '') {
+                    data[key] = Number(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            try {
+                // Send data to the backend API
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Display the results
+                predictionResult.textContent = result.prediction;
+                probabilityResult.textContent = result.probability;
+
+                // Style the result card based on risk
+                resultCard.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+                if (result.prediction === 'Low Risk') {
+                    resultCard.classList.add('bg-green-100', 'text-green-800');
+                } else {
+                    resultCard.classList.add('bg-red-100', 'text-red-800');
+                }
+
+                resultsContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error:', error);
+                predictionResult.textContent = 'Error';
+                probabilityResult.textContent = 'Could not get a prediction. Please try again.';
+                resultCard.classList.remove('bg-green-100', 'text-green-800');
+                resultCard.classList.add('bg-red-100', 'text-red-800');
+                resultsContainer.classList.remove('hidden');
+            } finally {
+                // Hide loading state
+                buttonText.classList.remove('hidden');
+                buttonSpinner.classList.add('hidden');
+                submitButton.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
