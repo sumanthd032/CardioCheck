@@ -190,7 +190,7 @@
             }
 
             try {
-                // Send data to the backend API
+                // Use a relative path. This works correctly when the page is served by FastAPI.
                 const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: {
@@ -200,7 +200,9 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Try to get a more detailed error from the server response
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.error || `HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
@@ -222,7 +224,7 @@
             } catch (error) {
                 console.error('Error:', error);
                 predictionResult.textContent = 'Error';
-                probabilityResult.textContent = 'Could not get a prediction. Please try again.';
+                probabilityResult.textContent = error.message || 'Could not get a prediction. Please try again.';
                 resultCard.classList.remove('bg-green-100', 'text-green-800');
                 resultCard.classList.add('bg-red-100', 'text-red-800');
                 resultsContainer.classList.remove('hidden');

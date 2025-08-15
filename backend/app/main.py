@@ -1,24 +1,31 @@
 import joblib
 import pandas as pd
+import traceback
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- 1. Application Setup ---
-# Create a FastAPI app instance
 app = FastAPI(title="CardioCheck API")
 
-# Mount the 'frontend' directory to serve static files
-# The path '../frontend' is relative to the 'backend' directory where you run uvicorn
+# --- 2. CORS Middleware ---
+# This allows the frontend (which is on a different "origin") to communicate with this backend.
+# In a production environment, you would restrict the allow_origins to your specific frontend domain.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
 app.mount("/static", StaticFiles(directory="../frontend"), name="static")
 
 
-# --- 2. Load Model and Columns ---
-# Load the pre-trained model and the column list on startup.
-# This is more efficient as it's done only once.
+# --- 3. Load Model and Columns ---
 try:
-    # The path is relative to the 'backend' directory
     model = joblib.load('models/logistic_regression_model.joblib')
     model_columns = joblib.load('models/model_columns.joblib')
     print("Model and columns loaded successfully.")
@@ -28,9 +35,7 @@ except Exception as e:
     model_columns = None
 
 
-# --- 3. Define the Input Data Model ---
-# Pydantic model to define the structure and data types for incoming request data.
-# These fields match the original columns of the dataset before preprocessing.
+# --- 4. Define the Input Data Model ---
 class PatientData(BaseModel):
     age: int
     sex: str
@@ -47,54 +52,64 @@ class PatientData(BaseModel):
     thal: str
 
 
-# --- 4. API Endpoints ---
+# --- 5. API Endpoints ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    """
-    Serves the main frontend page.
-    """
-    # The path is relative to the 'backend' directory
     with open("../frontend/index.html") as f:
         return HTMLResponse(content=f.read(), status_code=200)
 
 @app.post("/api/predict")
 def predict_disease(data: PatientData):
     """
-    Prediction endpoint. Takes patient data and returns the heart disease risk.
+    Prediction endpoint with detailed logging for debugging.
     """
     if not model or not model_columns:
-        return {"error": "Model not loaded. Please check server logs."}
+        return JSONResponse(status_code=503, content={"error": "Model not loaded. Please check server logs."})
 
     try:
-        # Convert incoming data into a pandas DataFrame
-        input_data = pd.DataFrame([data.dict()])
+        print("\n--- PREDICTION REQUEST RECEIVED ---")
+        print(f"Incoming data: {data.dict()}")
 
-        # One-hot encode the categorical features
-        # This must be consistent with the training process
-        input_data = pd.get_dummies(input_data)
+        # 1. Convert incoming data into a pandas DataFrame
+        input_df = pd.DataFrame([data.dict()])
+        print("\nStep 1: DataFrame created from input:")
+        print(input_df.to_string())
 
-        # Align the columns of the input data with the model's columns
-        # This adds missing columns (with value 0) and removes extra columns
-        input_data = input_data.reindex(columns=model_columns, fill_value=0)
+        # 2. One-hot encode the categorical features
+        input_df = pd.get_dummies(input_df)
+        print("\nStep 2: DataFrame after one-hot encoding. Columns:", input_df.columns.tolist())
+        
+        # 3. Align the columns of the input data with the model's columns
+        print("\nStep 3: Aligning columns with the trained model...")
+        print("Model expects columns:", model_columns.tolist())
+        
+        aligned_df = input_df.reindex(columns=model_columns, fill_value=0)
+        print("\nDataFrame after column alignment:")
+        print(aligned_df.to_string())
+        
+        if aligned_df.isnull().values.any():
+            print("ERROR: NaN values found after reindexing!")
+            raise ValueError("Data alignment resulted in NaN values.")
 
-        # Make prediction
-        prediction = model.predict(input_data)
-        probability = model.predict_proba(input_data)
+        # 4. Make prediction
+        print("\nStep 4: Making prediction...")
+        prediction = model.predict(aligned_df)
+        probability = model.predict_proba(aligned_df)
+        print(f"Prediction: {prediction[0]}, Probability: {probability[0]}")
 
-        # Determine the risk level
         risk = "High Risk" if prediction[0] == 1 else "Low Risk"
         
-        # Return the result
+        print("--- PREDICTION SUCCESSFUL ---\n")
         return {
             "prediction": risk,
-            "probability": f"{probability[0][1] * 100:.2f}%" # Probability of disease
+            "probability": f"{probability[0][1] * 100:.2f}%"
         }
     except Exception as e:
-        return {"error": f"An error occurred during prediction: {str(e)}"}
+        print("\n---!!! AN ERROR OCCURRED DURING PREDICTION !!!---")
+        traceback.print_exc()
+        print("--------------------------------------------------\n")
+        return JSONResponse(status_code=500, content={"error": f"An error occurred: {str(e)}"})
 
 @app.get("/api/health")
 def health_check():
-    """
-    A simple health check endpoint.
-    """
     return {"status": "ok"}
