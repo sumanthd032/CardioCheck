@@ -24,9 +24,9 @@ FastAPI to handle prediction requests.
 ------------------------------------------------------------------------
 
 ## Tech Stack
-- **Frontend:** HTML, Tailwind CSS, JavaScript\
-- **Backend:** Python, FastAPI\
-- **Machine Learning:** Scikit-learn, Pandas, NumPy, Joblib\
+- **Frontend:** HTML, Tailwind CSS, JavaScript
+- **Backend:** Python, FastAPI
+- **Machine Learning:** Scikit-learn, Pandas, NumPy, Joblib
 - **Server:** Uvicorn
 
 ------------------------------------------------------------------------
@@ -37,7 +37,7 @@ your local machine for development and testing purposes.
 
 ### Prerequisites
 
--   Python 3.10 or higher\
+-   Python 3.10 or higher
 -   pip and venv for package management
 
 ### Installation
@@ -65,9 +65,9 @@ your local machine for development and testing purposes.
 
 4.  Download the dataset:
 
-    -   Download the "Heart Disease UCI" dataset from Kaggle.\
-    -   Unzip the file and find `heart_disease_uci.csv`.\
-    -   Rename it to `heart.csv`.\
+    -   Download the "Heart Disease UCI" dataset from Kaggle.
+    -   Unzip the file and find `heart_disease_uci.csv`.
+    -   Rename it to `heart.csv`.
     -   Create a `data` folder in the project's root directory and place
         `heart.csv` inside it.
 
@@ -94,7 +94,7 @@ your local machine for development and testing purposes.
 
 3.  **Launch the Frontend:**
 
-    -   Open your web browser and navigate to <http://127.0.0.1:8000>.\
+    -   Open your web browser and navigate to <http://127.0.0.1:8000>.
     -   Fill in the form with patient data and click **"Calculate
         Risk"** to see the prediction.
 
